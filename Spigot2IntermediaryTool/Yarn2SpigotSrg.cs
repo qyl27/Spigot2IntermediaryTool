@@ -147,16 +147,16 @@ namespace Spigot2IntermediaryTool
                     if (MojangToBukkitMembers.ContainsKey((methodLine[1], methodLine[3], methodLine[2])))
                     {
                         result = $"MD: {IntermediaryClasses[methodLine[1]].named}/{methodLine[3]} " +
-                                  $"{methodLine[2]} " +
+                                  $"{ProcessDescriptionToYarn(methodLine[2])} " +
                                   $"{MojangToBukkitClasses[methodLine[1]]}/{MojangToBukkitMembers[(methodLine[1], methodLine[3], methodLine[2])].bukkitNamed} " + 
-                                  $"{ProcessDescription(methodLine[2])}";
+                                  $"{ProcessDescriptionToBukkit(methodLine[2])}";
                     }
                     else
                     {
                         result = $"MD: {IntermediaryClasses[methodLine[1]].named}/{methodLine[3]} " +
-                                     $"{methodLine[2]} " +
+                                     $"{ProcessDescriptionToYarn(methodLine[2])} " +
                                      $"{MojangToBukkitClasses[methodLine[1]]}/{methodLine[3]} " + 
-                                     $"{ProcessDescription(methodLine[2])}";
+                                     $"{ProcessDescriptionToBukkit(methodLine[2])}";
                     }
                     
                     Console.WriteLine(result);
@@ -164,8 +164,61 @@ namespace Spigot2IntermediaryTool
                 }
             }
         }
+        
+        private string ProcessDescriptionToYarn(string description)
+        {
+            var queue = new Queue<string>();
+            for (var i = 0; i < description.Length; i++)
+            {
+                if (description[i] == 'V'
+                    || description[i] == 'Z'
+                    || description[i] == 'B'
+                    || description[i] == 'C'
+                    || description[i] == 'S'
+                    || description[i] == 'I'
+                    || description[i] == 'J'
+                    || description[i] == 'F'
+                    || description[i] == 'D'
+                    || description[i] == '['
+                    || description[i] == '('
+                    || description[i] == ')')
+                {
+                    queue.Enqueue(description[i].ToString());
+                }
+                else
+                {
+                    if (description[i] == 'L')
+                    {
+                        for (var j = i; j < description.Length; j++)
+                        {
+                            if (description[j] == ';')
+                            {
+                                var className = description.Substring(i + 1, j - i - 1);
+                                if (MojangToBukkitClasses.ContainsKey(className))
+                                {
+                                    queue.Enqueue($"L{IntermediaryClasses[className]};");
+                                }
+                                else
+                                {
+                                    queue.Enqueue($"L{className};");
+                                }
+                                i = j;
+                            }
+                        }
+                    }
+                }
+            }
 
-        private string ProcessDescription(string description)
+            var result = string.Empty;
+            foreach (var q in queue)
+            {
+                result += q;
+            }
+
+            return result;
+        }
+
+        private string ProcessDescriptionToBukkit(string description)
         {
             var queue = new Queue<string>();
             for (var i = 0; i < description.Length; i++)

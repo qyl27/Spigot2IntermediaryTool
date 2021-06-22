@@ -45,7 +45,7 @@ namespace Spigot2IntermediaryTool
             var intermediary = File.ReadAllLines(intermediaryPath);
 
             //new Spigot2Intermediary(bukkitClasses, bukkitMembers, intermediary).Run();
-            new Yarn2SpigotSrg(bukkitClasses, bukkitMembers, intermediary).Run();
+            new Intermediary2SpigotSrg(bukkitClasses, bukkitMembers, intermediary).Run();
         }
     }
 }
