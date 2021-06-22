@@ -1,15 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
 namespace Spigot2IntermediaryTool
 {
-    public class Spigot2Intermediary
+    public class Yarn2SpigotSrg
     {
         private string[] BukkitClasses { get; }
         private string[] BukkitMembers { get; }
-        private string[] Intermediary { get; }
-
+        private string[] IntermediaryMerged { get; }
+        
         private Dictionary<string, string> BukkitToMojangClasses { get; } = new();
         private Dictionary<string, string> MojangToBukkitClasses { get; } = new();
         private Dictionary<(string clazz, string name, string description), string> MojangToBukkitMembers { get; } = new();
@@ -20,11 +20,11 @@ namespace Spigot2IntermediaryTool
 
         private List<string> Results { get; } = new();
         
-        public Spigot2Intermediary(string[] bukkitClasses, string[] bukkitMembers, string[] intermediary)
+        public Yarn2SpigotSrg(string[] bukkitClasses, string[] bukkitMembers, string[] intermediaryMerged)
         {
             BukkitClasses = bukkitClasses;
             BukkitMembers = bukkitMembers;
-            Intermediary = intermediary;
+            IntermediaryMerged = intermediaryMerged;
         }
 
         public void Run()
@@ -32,9 +32,8 @@ namespace Spigot2IntermediaryTool
             LoadBukkitClass();
             LoadBukkitMember();
             LoadIntermediary();
-
-            MakeTiny();
-
+            
+            MakeSrg();
             Save();
         }
 
@@ -70,11 +69,10 @@ namespace Spigot2IntermediaryTool
                 MojangToBukkitMembers[(BukkitToMojangClasses[memberParts[0]], memberParts[1], memberParts[2])] = memberParts[3];
             }
         }
-        
         private void LoadIntermediary()
         {
             Console.WriteLine("I: Loading intermediary mappings.");
-            foreach (var intermediaryLine in Intermediary)
+            foreach (var intermediaryLine in IntermediaryMerged)
             {
                 if (intermediaryLine.StartsWith("CLASS"))
                 {
@@ -98,42 +96,70 @@ namespace Spigot2IntermediaryTool
                 }
             }
         }
-        
-        private void MakeTiny()
-        {
-            Console.WriteLine("I: Making tiny.");
-            var tiny = new List<string>();
-            tiny.Add("v1\tofficial\tbukkit\tintermediary\tnamed");
 
-            foreach (var intermediaryLine in Intermediary)
+        private void MakeSrg()
+        {
+            Console.WriteLine("I: Making srg.");
+            
+            foreach (var intermediaryLine in IntermediaryMerged)
             {
                 if (intermediaryLine.StartsWith("CLASS"))
                 {
                     var classLine = intermediaryLine.Split("\t");
-
-                    var mojang = classLine[1];
-                    if (MojangToBukkitClasses.ContainsKey(mojang))
+                    if (!MojangToBukkitClasses.ContainsKey(classLine[1]))
                     {
-                        var result =
-                            $"CLASS\t{mojang}\t{MojangToBukkitClasses[mojang]}\t{IntermediaryClasses[mojang].intermediary}\t{IntermediaryClasses[mojang].named}";
-                        Console.WriteLine($"D: Processed {result}");
-                        tiny.Add(result);
+                        continue;
                     }
+                    
+                    var result = $"CL: {classLine[3]} {MojangToBukkitClasses[classLine[1]]}";
+                    Console.WriteLine(result);
+                    Results.Add(result);
                 }
-
+                
                 if (intermediaryLine.StartsWith("FIELD"))
                 {
                     var fieldLine = intermediaryLine.Split("\t");
+                    if (!MojangToBukkitClasses.ContainsKey(fieldLine[1]))
+                    {
+                        continue;
+                    }
 
+                    if (!MojangToBukkitMembers.ContainsKey((MojangToBukkitClasses[fieldLine[1]], fieldLine[3], fieldLine[2])))
+                    {
+                        continue;
+                    }
+                    
+                    var result = $"FD: {MojangToBukkitClasses[fieldLine[1]]}/{fieldLine[4]} " +
+                                 $"{MojangToBukkitClasses[fieldLine[1]]}/{MojangToBukkitMembers[(MojangToBukkitClasses[fieldLine[1]], fieldLine[3], fieldLine[2])]}";
+                    Console.WriteLine(result);
+                    Results.Add(result);
+                }
+                
+                if (intermediaryLine.StartsWith("METHOD"))
+                {
+                    var methodLine = intermediaryLine.Split("\t");
+                    if (!MojangToBukkitClasses.ContainsKey(methodLine[1]))
+                    {
+                        continue;
+                    }
+
+                    if (!MojangToBukkitMembers.ContainsKey((MojangToBukkitClasses[methodLine[1]], methodLine[3], methodLine[2])))
+                    {
+                        continue;
+                    }
+                    
+                    var result = $"MD: {MojangToBukkitClasses[methodLine[1]]}/{methodLine[4]} " +
+                                 $"{methodLine[2]}" +
+                                 $"{MojangToBukkitClasses[methodLine[1]]}/{MojangToBukkitMembers[(MojangToBukkitClasses[methodLine[1]], methodLine[3], methodLine[2])]}";
+                    Console.WriteLine(result);
+                    Results.Add(result);
                 }
             }
-
-            Results.AddRange(tiny);
         }
         
         private void Save()
         {
-            File.WriteAllLines("mappings.tiny", Results);
+            File.WriteAllLines("mappings.srg", Results);
         }
     }
 }
