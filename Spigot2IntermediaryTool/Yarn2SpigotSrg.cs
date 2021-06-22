@@ -12,7 +12,7 @@ namespace Spigot2IntermediaryTool
         
         private Dictionary<string, string> BukkitToMojangClasses { get; } = new();
         private Dictionary<string, string> MojangToBukkitClasses { get; } = new();
-        private Dictionary<(string clazz, string name, string description), string> MojangToBukkitMembers { get; } = new();
+        private Dictionary<(string clazz, string name, string description), (string bukkitNamed, string description)> MojangToBukkitMembers { get; } = new();
         
         private Dictionary<string, (string intermediary, string named)> IntermediaryClasses { get; } = new();
         private Dictionary<(string clazz, string type, string official), (string intermediary, string named)> IntermediaryFields { get; } = new();
@@ -66,7 +66,7 @@ namespace Spigot2IntermediaryTool
 
                 var memberParts = memberLine.Split(" ");
                 Console.WriteLine($"D: Loaded bukkit member {memberParts[3]}.");
-                MojangToBukkitMembers[(BukkitToMojangClasses[memberParts[0]], memberParts[1], memberParts[2])] = memberParts[3];
+                MojangToBukkitMembers[(BukkitToMojangClasses[memberParts[0]], memberParts[1], memberParts[2])] = (memberParts[3], memberParts[2]);
             }
         }
         private void LoadIntermediary()
@@ -116,24 +116,24 @@ namespace Spigot2IntermediaryTool
                     Results.Add(result);
                 }
                 
-                if (intermediaryLine.StartsWith("FIELD"))
-                {
-                    var fieldLine = intermediaryLine.Split("\t");
-                    if (!MojangToBukkitClasses.ContainsKey(fieldLine[1]))
-                    {
-                        continue;
-                    }
-
-                    if (!MojangToBukkitMembers.ContainsKey((MojangToBukkitClasses[fieldLine[1]], fieldLine[3], fieldLine[2])))
-                    {
-                        continue;
-                    }
-                    
-                    var result = $"FD: {MojangToBukkitClasses[fieldLine[1]]}/{fieldLine[4]} " +
-                                 $"{MojangToBukkitClasses[fieldLine[1]]}/{MojangToBukkitMembers[(MojangToBukkitClasses[fieldLine[1]], fieldLine[3], fieldLine[2])]}";
-                    Console.WriteLine(result);
-                    Results.Add(result);
-                }
+                // if (intermediaryLine.StartsWith("FIELD"))
+                // {
+                //     var fieldLine = intermediaryLine.Split("\t");
+                //     if (!MojangToBukkitClasses.ContainsKey(fieldLine[1]))
+                //     {
+                //         continue;
+                //     }
+                //
+                //     if (!MojangToBukkitMembers.ContainsKey((MojangToBukkitClasses[fieldLine[1]], fieldLine[3], fieldLine[2])))
+                //     {
+                //         continue;
+                //     }
+                //     
+                //     var result = $"FD: {MojangToBukkitClasses[fieldLine[1]]}/{fieldLine[4]} " +
+                //                  $"{MojangToBukkitClasses[fieldLine[1]]}/{MojangToBukkitMembers[(MojangToBukkitClasses[fieldLine[1]], fieldLine[3], fieldLine[2])]}";
+                //     Console.WriteLine(result);
+                //     Results.Add(result);
+                // }
                 
                 if (intermediaryLine.StartsWith("METHOD"))
                 {
@@ -143,18 +143,79 @@ namespace Spigot2IntermediaryTool
                         continue;
                     }
 
-                    if (!MojangToBukkitMembers.ContainsKey((MojangToBukkitClasses[methodLine[1]], methodLine[3], methodLine[2])))
+                    var result = string.Empty;
+                    if (MojangToBukkitMembers.ContainsKey((methodLine[1], methodLine[3], methodLine[2])))
                     {
-                        continue;
+                        result = $"MD: {IntermediaryClasses[methodLine[1]].named}/{methodLine[3]} " +
+                                  $"{methodLine[2]} " +
+                                  $"{MojangToBukkitClasses[methodLine[1]]}/{MojangToBukkitMembers[(methodLine[1], methodLine[3], methodLine[2])].bukkitNamed} " + 
+                                  $"{ProcessDescription(methodLine[2])}";
+                    }
+                    else
+                    {
+                        result = $"MD: {IntermediaryClasses[methodLine[1]].named}/{methodLine[3]} " +
+                                     $"{methodLine[2]} " +
+                                     $"{MojangToBukkitClasses[methodLine[1]]}/{methodLine[3]} " + 
+                                     $"{ProcessDescription(methodLine[2])}";
                     }
                     
-                    var result = $"MD: {MojangToBukkitClasses[methodLine[1]]}/{methodLine[4]} " +
-                                 $"{methodLine[2]}" +
-                                 $"{MojangToBukkitClasses[methodLine[1]]}/{MojangToBukkitMembers[(MojangToBukkitClasses[methodLine[1]], methodLine[3], methodLine[2])]}";
                     Console.WriteLine(result);
                     Results.Add(result);
                 }
             }
+        }
+
+        private string ProcessDescription(string description)
+        {
+            var queue = new Queue<string>();
+            for (var i = 0; i < description.Length; i++)
+            {
+                if (description[i] == 'V'
+                    || description[i] == 'Z'
+                    || description[i] == 'B'
+                    || description[i] == 'C'
+                    || description[i] == 'S'
+                    || description[i] == 'I'
+                    || description[i] == 'J'
+                    || description[i] == 'F'
+                    || description[i] == 'D'
+                    || description[i] == '['
+                    || description[i] == '('
+                    || description[i] == ')')
+                {
+                    queue.Enqueue(description[i].ToString());
+                }
+                else
+                {
+                    if (description[i] == 'L')
+                    {
+                        for (var j = i; j < description.Length; j++)
+                        {
+                            if (description[j] == ';')
+                            {
+                                var className = description.Substring(i + 1, j - i - 1);
+                                if (MojangToBukkitClasses.ContainsKey(className))
+                                {
+                                    queue.Enqueue($"L{MojangToBukkitClasses[className]};");
+                                }
+                                else
+                                {
+                                    queue.Enqueue($"L{className};");
+                                }
+                                i = j;
+                            }
+                        }
+                    }
+                }
+            }
+
+            var result = string.Empty;
+            foreach (var q in queue)
+            {
+                result += q;
+            }
+
+            return result;
         }
         
         private void Save()
