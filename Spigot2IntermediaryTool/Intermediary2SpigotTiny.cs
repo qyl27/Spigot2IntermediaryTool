@@ -181,7 +181,7 @@ namespace Spigot2IntermediaryTool
                                 var className = description.Substring(i + 1, j - i - 1);
                                 if (MojangToBukkitClasses.ContainsKey(className))
                                 {
-                                    queue.Enqueue($"L{IntermediaryClasses[className]};");
+                                    queue.Enqueue($"L{IntermediaryClasses[className].intermediary};");
                                 }
                                 else
                                 {
