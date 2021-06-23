@@ -46,6 +46,7 @@ namespace Spigot2IntermediaryTool
 
             //new Spigot2Intermediary(bukkitClasses, bukkitMembers, intermediary).Run();
             new Intermediary2SpigotSrg(bukkitClasses, bukkitMembers, intermediary).Run();
+            new Intermediary2SpigotTiny(bukkitClasses, bukkitMembers, intermediary).Run();
         }
     }
 }
