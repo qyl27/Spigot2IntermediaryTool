@@ -127,14 +127,14 @@ namespace Spigot2IntermediaryTool
                     var result = string.Empty;
                     if (MojangToBukkitMembers.ContainsKey((methodLine[1], methodLine[3], methodLine[2])))
                     {
-                        result = $"MD: {IntermediaryClasses[methodLine[1]].intermediary}/{methodLine[3]} " +
+                        result = $"MD: {IntermediaryClasses[methodLine[1]].intermediary}/{methodLine[4]} " +
                                   $"{ProcessDescriptionToYarn(methodLine[2])} " +
                                   $"{MojangToBukkitClasses[methodLine[1]]}/{MojangToBukkitMembers[(methodLine[1], methodLine[3], methodLine[2])]} " + 
                                   $"{ProcessDescriptionToBukkit(methodLine[2])}";
                     }
                     else
                     {
-                        result = $"MD: {IntermediaryClasses[methodLine[1]].intermediary}/{methodLine[3]} " +
+                        result = $"MD: {IntermediaryClasses[methodLine[1]].intermediary}/{methodLine[4]} " +
                                      $"{ProcessDescriptionToYarn(methodLine[2])} " +
                                      $"{MojangToBukkitClasses[methodLine[1]]}/{methodLine[3]} " + 
                                      $"{ProcessDescriptionToBukkit(methodLine[2])}";
