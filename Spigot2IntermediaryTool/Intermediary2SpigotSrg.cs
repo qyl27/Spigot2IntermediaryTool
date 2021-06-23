@@ -184,6 +184,7 @@ namespace Spigot2IntermediaryTool
                                     queue.Enqueue($"L{className};");
                                 }
                                 i = j;
+                                break;
                             }
                         }
                     }
@@ -237,6 +238,7 @@ namespace Spigot2IntermediaryTool
                                     queue.Enqueue($"L{className};");
                                 }
                                 i = j;
+                                break;
                             }
                         }
                     }
