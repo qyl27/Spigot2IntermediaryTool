@@ -101,7 +101,7 @@ namespace Spigot2IntermediaryTool
         {
             Console.WriteLine("I: Making srg.");
             
-            Results.Add("v1\tnamed\tintermediary\tspigot");
+            Results.Add("v1\tofficial\tnamed\tintermediary\tspigot");
             
             foreach (var intermediaryLine in IntermediaryMerged)
             {
@@ -113,7 +113,11 @@ namespace Spigot2IntermediaryTool
                         continue;
                     }
                     
-                    var result = $"CLASS\t{classLine[3]}\t{classLine[2]}\t{MojangToBukkitClasses[classLine[1]]}";
+                    var result = $"CLASS\t" +
+                                 $"{classLine[1]}\t" +
+                                 $"{classLine[3]}\t" +
+                                 $"{classLine[2]}\t" +
+                                 $"{MojangToBukkitClasses[classLine[1]]}";
                     Console.WriteLine(result);
                     Results.Add(result);
                 }
@@ -129,16 +133,20 @@ namespace Spigot2IntermediaryTool
                     var result = string.Empty;
                     if (MojangToBukkitMembers.ContainsKey((methodLine[1], methodLine[3], methodLine[2])))
                     {
-                        result = $"METHOD\t{IntermediaryClasses[methodLine[1]].named}" +
-                                 $"{ProcessDescriptionToYarn(methodLine[2])}\t" +
+                        result = $"METHOD\t" +
+                                 $"{methodLine[1]}\t" +
+                                 $"{methodLine[2]}\t" +
+                                 $"{IntermediaryClasses[methodLine[1]].named}\t" +
                                  $"{methodLine[5]}\t" +
                                  $"{methodLine[4]}\t" +
                                  $"{MojangToBukkitMembers[(methodLine[1], methodLine[3], methodLine[2])]}";
                     }
                     else
                     {
-                        result = $"METHOD\t{IntermediaryClasses[methodLine[1]].named}" +
-                                 $"{ProcessDescriptionToYarn(methodLine[2])}\t" +
+                        result = $"METHOD\t" +
+                                 $"{methodLine[1]}\t" +
+                                 $"{methodLine[2]}\t" +
+                                 $"{IntermediaryClasses[methodLine[1]].named}\t" +
                                  $"{methodLine[5]}\t" +
                                  $"{methodLine[4]}\t" +
                                  $"{methodLine[3]}";
